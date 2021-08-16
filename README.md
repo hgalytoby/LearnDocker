@@ -1,0 +1,183 @@
+# 筆記
+
+## docker 常用指令
+- 幫助命令
+    - docker version
+        - 顯示 docker 版本訊息
+    - docker info
+        - 顯示 docker 更詳細的訊息
+    - docker --help 
+        - 顯示 docker 指令列表
+- 鏡像命令
+    - `docker run [options] IMAGE [COMMAND][ARG...]`
+    - options
+    - --name="容器新名稱": 為容器指定一個名稱
+    - -d: 後台運行容器，並返回容器ID，也即啟動守護式容器
+    - -i: 以交互模式運行容器，通常與 -t 同時使用
+    - -t: 為容器重新分配一個偽輸入終端，通常與 -t 同時使用
+    - -P: 隨機 port 映射
+    - -p: 指定 port 映射，有以下四種格式
+        - ip:hostPort:containerPort
+        - ip::containerPort
+        - hostPort:containerPort
+        - containerPort
+    - 範例
+        - `docker run -it [IMAGE_ID] or [IMAGE_NAME]`
+            - 會進入 docker 容器內 
+        - `docker run -it --name=mydocker ubuntu:18.04`
+        - `docker run -it --name=mydocker ubuntu:18.04 /bin/bash`
+            - 用 bash 形式 
+- 容器命令
+    - docker ps
+        - 顯示所有 docker 正在執行的容器 
+        - options
+            - -a: 顯示當前所有正在運行的容器 + 歷史上運行過的 
+            - -l: 顯示上一個運行容器的訊息
+            - -n: 顯示最近n個創建的容器
+            - -q: 靜默模式，只顯示容器編號
+            - --no-trunc: 不截斷輸出
+        - 範例
+            - `docker ps -a`
+            - `docker ps -l`
+            - `docker ps -n`
+            - `docker ps -n 3`
+                - 顯示 3 個最近運行的
+            - `docker ps -q`
+            - `docker ps -lq`
+                - -l 是顯示上一個運行容器的訊息，加上 q 就會只顯示容器編號
+    - docker 退出容器
+        - 兩種退出方式
+            - exit
+                - 容器停止退出
+            - ctrl + P + Q
+                - 容器不停止退出           
+    - docker 啟動重啟停止
+        - `docker start [CONTAINER_ID] or [CONTAINER_NAME]`
+    - docker 重啟
+        - `docker restart [CONTAINER_ID] or [CONTAINER_NAME]`
+    - docker 停止
+        - `docker stop [CONTAINER_ID] or [CONTAINER_NAME]`
+    - docker 強制停止
+        - `docker kill [CONTAINER_ID] or [CONTAINER_NAME]`
+    - docker 刪除容器
+        - `docker rm [CONTAINER_ID] or [CONTAINER_NAME]`
+    - docker 強制刪除容器(正在運行的)
+        - `docker rm -f [CONTAINER_ID] or [CONTAINER_NAME]`
+    - docker 一次性刪除多個容器
+        - `docker rm -f $(docker ps -a  -q)`
+        - `docker ps -a -q | xargs docker rm`
+- 重要
+    - 啟動守護式容器
+        - `docker run -d [CONTAINER_ID] or [CONTAINER_NAME]`
+            - 如果沒有命令的話，一啟動就會停止
+            - 可以用 shell 不讓容器停止
+                - `docker run -d ubuntu:18.04 /bin/bash -c "while true; do echo hello; sleep 2; done"`
+    - 查看容器日誌
+        - `docker logs -f -t --tall [CONTAINER_ID] or [CONTAINER_NAME]`
+            - -t 是加入時間戳
+            - -f 跟隨最新的日誌印出
+            - --tail 數字 顯示最後多少條
+        - 範例
+            - `docker logs [CONTAINER_ID] or [CONTAINER_NAME]`
+            - `docker logs -t [CONTAINER_ID] or [CONTAINER_NAME]`
+            - `docker logs -t -f --tail 3 [CONTAINER_ID] or [CONTAINER_NAME]`
+                - 只顯示 3 條訊息
+    - 查看容器內運行的 process
+        - `docker top [CONTAINER_ID] or [CONTAINER_NAME]`
+    - 查看容器內部細節
+        - `docker inspect [CONTAINER_ID] or [CONTAINER_NAME]`
+        - 顯示容器內部所有細節
+    - 進入正在運行的容器並以命令行交互
+        - `docker exec it [CONTAINER_ID] or [CONTAINER_NAME] bashShell`
+        - 重新進入 `docker attach [CONTAINER_ID] or [CONTAINER_NAME]`
+        - 上面兩個區別
+            - attach
+                - 直接進入容器啟動命令的終端，不會啟動新的 process
+            - exec
+                - 是在容器中打開新的終端，並且可以啟動新的 process
+                - 範例
+                    - `docker exec -t [CONTAINER_ID] or [CONTAINER_NAME] ls -l`
+                        - 送指令到容器內直接拿到結果
+                    - `docker exec -t [CONTAINER_ID] or [CONTAINER_NAME] /bin/bash` or `docker exec -t [CONTAINER_ID] or [CONTAINER_NAME] bash`
+                        - bash 形式進入到容器內
+    -  從容器內拷貝文件到主機上
+        - docker cp [CONTAINER_ID] or [CONTAINER_NAME]:CONTAINER路徑 目的本機路徑 
+            - 範例 
+                - `docker cp [CONTAINER_ID] /tmp/hello.txt /root`
+- 小總結
+    - 常用命令
+        - attach 當前 shell 下 attach 連接指定運行鏡像
+        - build 通過 Dockerfile 客制鏡像
+        - commit 提交當前容器為新的鏡像
+        - cp 從容器中複製指定文件或者目錄到主機上
+        - create 創建一個新的容器，同 run，當不啟動容器
+        - diff 查看 docker 容器變化
+        - events 從 docker 服務獲取容器實時事件
+        - exec 在已存在的容器上運行命令
+        - export 導出容器的內容留作為一個 tar 歸檔文件[對應 import] 
+        - history 顯示一個鏡像形成歷史
+        - images 顯示系統當前鏡像
+        - import 從 tar 包中的內容創建一個新的文件系統映像[對應export]
+        - info 顯示系統相關訊息
+        - inspect 查看容器詳細訊息
+        - kill kill 指定 docker 容器
+        - load 從一個 tar 包加載一個鏡像[對應 save]
+        - login 註冊或登入一個 docker 源伺服器
+        - logout 從當前 Docker registry 退出
+        - logs 輸出當前容器日誌訊息
+        - port 查看映射 port 對應容器內部源 port
+        - pause 暫停容器
+        - ps 列出容器列表
+        - pull 從 docker 鏡像伺服器拉取指定鏡像或者庫鏡像
+        - restart 重新啟動運行的容器
+        - rm 移除一個或多個容器
+        - rmi 移除一個或多個鏡像 [無容器使用該鏡像才可刪除，否則需刪除相關容器才可以繼續或 -f 強制刪除]
+        - run 創建一個新的容器並運行一個命令
+        - save 保存一個鏡像為 tar 包
+        - search 在 docker hub 中搜尋鏡像
+        - start 啟動容器
+        - stop 停止容器
+        - tag  給源中鏡像打上標籤
+        - top 查看容器中運行的 process 訊息
+        - unpause 取消暫停容器
+        - version 查看 docker 版本訊息
+        - wait 擷取容器停止時的退出狀態值
+
+
+## docker images
+- options
+    - -a: 列出本機所有的鏡像(含中間印象層)
+    - -q: 只顯示鏡像ID
+    - --digests: 顯示鏡像的摘要訊息
+    - --no-trunc: 顯示完整的鏡像訊息    
+- 範例 
+    - `docker images`
+    - `docker images -a`
+    - `docker images -d`
+    
+## docker search    
+- 網站
+    - https://hub.docker.com/
+- options
+    - --no-trunc: 顯示完整的鏡像訊息 
+    - -s: 列出星星操過指定值得鏡像
+    - --automated: 只列出 automated build 類型的鏡像。
+- 範例
+    - `docker search nginx`
+    - `docker search -s 30 nginx`
+    - `docker search -s 30 --no-trunc nginx`
+
+## docker pull
+- `docker pull nginx` 等同於 `docker pull nginx:latest`
+    
+## docker rmi
+- 刪除單個
+    - `docker rmi [IMAGE_ID] or [IMAGE_NAME]`
+    - 不給版本預設刪除
+- 刪除多個
+    - `docker rmi -f [IMAGE_NAME]:TAG [IMAGE_NAME]:TAG`
+- 刪除全部
+    - `docker rmi -f $(docker images -q)`
+        - q 指的是顯示本機所有的Image ID
+        - a 指的是過往與當前活著的全部 ID 
+        
