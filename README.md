@@ -23,7 +23,7 @@
         - containerPort
     - 範例
         - `docker run -it [IMAGE_ID] or [IMAGE_NAME]`
-            - 會進入 docker 容器內 
+            - 啟動容器並進入 docker 容器內 
         - `docker run -it --name=mydocker ubuntu:18.04`
         - `docker run -it --name=mydocker ubuntu:18.04 /bin/bash`
             - 用 bash 形式 
@@ -99,7 +99,8 @@
                     - `docker exec -t [CONTAINER_ID] or [CONTAINER_NAME] ls -l`
                         - 送指令到容器內直接拿到結果
                     - `docker exec -t [CONTAINER_ID] or [CONTAINER_NAME] /bin/bash` or `docker exec -t [CONTAINER_ID] or [CONTAINER_NAME] bash`
-                        - bash 形式進入到容器內
+                        - bash 形式進入到容器內，但不能互動。
+                        - 使用 it 就可以在容器互動了。
     -  從容器內拷貝文件到主機上
         - docker cp [CONTAINER_ID] or [CONTAINER_NAME]:CONTAINER路徑 目的本機路徑 
             - 範例 
@@ -181,3 +182,81 @@
         - q 指的是顯示本機所有的Image ID
         - a 指的是過往與當前活著的全部 ID 
         
+## docker commit
+- 1.docker commit
+    - 提交容器副本使之成為一個新的鏡像
+- 2.docker commit -m 
+    - 提交描述訊息
+- 3.docker commit -a
+    - 作者
+- 範例:
+    - `docker commit -a "dudulu" -m "提交" [IMAGE_ID] or [IMAGE_NAME] 自定義名稱`
+    - `docker commit -a "dudulu" -m "First Commit" 1qaz2wsx3edc myimage:48.7.63`
+
+## docker 容器數據卷
+- 是什麼
+    - 類似 Redis 裡面的 rdb 和 aof 文件
+- 能做什麼
+    - 容器得持久化
+    - 容器間繼承 + 共享數據
+- 數據卷
+    - 直接命令添加
+        - 命令
+            - `docker run -it -v /本機絕對路徑:/容器內目錄 鏡像名`
+            - `docker run -it -v /Users/dudulu/Desktop/All/Docker/LearnDocker/mydata:/mydata ubuntu:18.04`
+        - 查看數據卷是否掛載成功
+        - 容器和本機之間數據共享
+        - 容器停止後，主機修改數據是否同步
+        - 命令(帶權限，只能讀不能寫)
+            - `docker run -it -v /本機絕對路徑:/容器內目錄:ro 鏡像名`
+            - `docker run -it -v /Users/dudulu/Desktop/All/Docker/LearnDocker/mydata:/mydata:ro ubuntu:18.04`
+            - ro = Read-only
+    - Dockerfile 添加
+        - 跟目錄下創建 Dockerfile
+        - 可在 Docker 中使用 VOLUME 指令給鏡像增加一個或多個數據卷
+        - File 構建
+        - build 後生成鏡像
+            - 獲得一個新鏡像
+            - -f = dockerfile 在哪裡
+            - -t = 自定義名字
+            - 範例
+                - `docker build -f ./DockerfileTest/Dockerfile -t dudulu/ubuntu .`
+        - run 容器
+        - VOLUME 默認位置要用 `docker inspect [CONTAINER_ID] or [CONTAINER_NAME]` 之後查看 Volumes 或者 Mounts
+            - Mac 找不到 VOLUME 位置，但是 Ubuntu 有找到。
+    - 備註
+        - 如果 Docker 掛載本機目錄 Docker 出現 cannot open directory.:Permission denied
+            - 在掛載目錄後多加一個 --privileged-true 參數即可
+                - docker run -it -v /Users/dudulu/Desktop/All/Docker/LearnDocker/mydata:/mydata --privileged-true ubuntu:18.04`
+- 數據卷容器
+    - 先啟動一個父容器
+        - `docker run -it --name dc01 dudulu/ubun:1.0`
+    - dc02/dc03 繼承自 dc01
+        - `docker run -it --name dc02 --volumes-from dc01 dudulu/ubun:1.0`
+        - `docker run -it --name dc03 --volumes-from dc01 dudulu/ubun:1.0`
+    - 回到 dc01 可以看到 02/03 都能互相新增資料並共享。
+    - 刪除 dc01，dc02 修改後 dc03 是否可以訪問(可以)。
+    - 刪除 dc02，dc03 是否可以訪問(可以)。
+    - 新增 dc04 繼承 dc03 後在刪除 dc03， dc04 是否有共享數據(有)。
+        - `docker run -it --name dc04 --volumes-from dc03 dudulu/ubun:1.0`
+    - 結論: 容器之間設置訊息的傳遞，數據卷的生命週期一直持續到沒有容器使用它為止。
+- 特點
+    - 1.數據卷可在容器之間共享或重用
+    - 2.數據卷中的更改可以直接生效
+    - 3.數據卷中的更改不會包含在鏡像的更新中
+    - 4.數據卷的生命週期一直持續到沒有容器使用它為止
+    
+# DockerFile 體系結構
+- FROM
+- MAINTAINER
+- RUN
+- EXPOSE
+- WORKDIR
+- ENV
+- ADD
+- COPY
+- VOLUME
+- CMD
+- ENTRYPOINT
+- ONBUILD
+- 小總結 
