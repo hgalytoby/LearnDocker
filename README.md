@@ -246,17 +246,56 @@
     - 3.數據卷中的更改不會包含在鏡像的更新中
     - 4.數據卷的生命週期一直持續到沒有容器使用它為止
     
-# DockerFile 體系結構
-- FROM
-- MAINTAINER
-- RUN
-- EXPOSE
-- WORKDIR
-- ENV
-- ADD
-- COPY
-- VOLUME
-- CMD
-- ENTRYPOINT
-- ONBUILD
-- 小總結 
+# DockerFile 解析
+- 是什麼
+    - Dockerfile 是用來創建 Docker 鏡像的創建文件，是由一系列命令和參數組成的腳本。
+    - 創建三步驟
+        - 編寫 Dockerfile 文件
+        - docker build
+        - docker run
+- DockerFile 構建過程解析
+    - Dockerfile 內容基礎知識
+        - 每條保留字指令都必須為大寫字母且後面一定要跟隨至少一個參數
+        - 指令按照從上到下，順序執行
+        - "#表示注釋"
+        - 每條指令都會創建一個新的鏡像層，並對鏡像進行提交 
+    - Docker 執行 Dockerfile 的大致流程
+        - docker 從基礎鏡像運行一個容器
+        - 執行一條指令並對容器作出修改
+        - 執行類似 docker commit 的操作提交一個新的鏡像層
+        - docker 在基於剛提交的鏡像運行一個新容器
+        - 執行 dockerfile 中的下一條指令直到所有指令都執行完成
+- DockerFile 體系結構
+    - FROM
+        - 基礎鏡像，當前新鏡像是基於哪個鏡像的
+    - MAINTAINER
+        - 鏡像維護者的姓名和電子信箱
+    - RUN 
+        - 容器創建時需要運行的命令
+    - EXPOSE
+        - 容器對外暴露出的端口
+    - WORKDIR
+        - 創建容器後，終端默認登入進來的工作目錄，工作路徑
+    - ENV
+        - 用來創建鏡像過程中設定環境變量
+            - `ENV MY_PATH /usr/mytest`
+                - 這個環境變量可以在後續的任何 RUN 指令中使用，這就如同在命令前面指定了環境變量前綴一樣
+                - 也可以在其他指令中直接使用這些環境變量
+            - 比如: `WORKDIR $MY_PATH`
+    - ADD
+        - 將本機目錄下的文件複製到鏡像且 ADD 命令會自動處理 URL 和解壓 tar 壓縮檔
+    - COPY
+        - 類似 ADD，複製文件和目錄到鏡像中
+        - 將從創建上下文目錄中 <來源路徑> 的文件/目錄複製到新一層的鏡像內 <目標路徑> 位置
+            - COPY src dest
+            - COPY ["src", "dest"]
+    - VOLUME
+        - 容器數據卷，用於數據保存和持久化工作
+    - CMD
+        - 容器啟動時要運行的命令與 RUN 相似
+        - Dockerfile 中可以有多個 CMD 指令，但只有最後一個生效，CMD 會被 docker run 之後的參數替換
+    - ENTRYPOINT
+        - 容器啟動時要運行的命令
+        - ENTRYPOINT 的目的和 CMD 一樣，都是在指定容器啟動程式及參數
+    - ONBUILD 
+        - 當創建一個被繼承的 Dockerfile 時運行命令，父鏡像在被子繼承後父鏡像的 onbuild 會觸發
